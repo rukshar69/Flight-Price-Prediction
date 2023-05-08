@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import seaborn as sns
+
 
 ####Methods#######################
 st.cache_data()
@@ -13,7 +15,43 @@ def load_data():
         else:
             return x
 
+    # Extract day and month columns from Date_of_journey column
     train_data['Destination'] = train_data['Destination'].apply(newd)
+    train_data['Journey_day'] = pd.to_datetime(train_data['Date_of_Journey'],format='%d/%m/%Y').dt.day
+    train_data['Journey_month'] = pd.to_datetime(train_data['Date_of_Journey'],format='%d/%m/%Y').dt.month
+
+    train_data.drop('Date_of_Journey',inplace=True,axis=1)
+    train_data.drop(['Route', 'Additional_Info'], axis=1, inplace=True)
+
+    # Extracting hours and minutes from departure and arrival time
+    train_data['Dep_hour'] = pd.to_datetime(train_data['Dep_Time']).dt.hour
+    train_data['Dep_min'] = pd.to_datetime(train_data['Dep_Time']).dt.minute
+    train_data.drop('Dep_Time',axis=1,inplace=True) #drop the departure time column
+    train_data['Arrival_hour'] = pd.to_datetime(train_data['Arrival_Time']).dt.hour
+    train_data['Arrival_min'] = pd.to_datetime(train_data['Arrival_Time']).dt.minute
+    train_data.drop('Arrival_Time',axis=1,inplace=True) #drop the arrival time column
+
+    # Dropping the Duration column and extracting important info(Hour and Minute) from it
+    duration = list(train_data['Duration'])
+    for i in range(len(duration)):
+        if len(duration[i].split()) != 2:
+            if 'h' in duration[i]:
+                duration[i] = duration[i] + ' 0m'
+            else:
+                duration[i] = '0h ' + duration[i]
+    duration_hour = []
+    duration_min = []
+    for i in duration:
+        h,m = i.split()
+        duration_hour.append(int(h[:-1]))
+        duration_min.append(int(m[:-1]))
+    train_data['Duration_hours'] = duration_hour
+    train_data['Duration_mins'] = duration_min
+    train_data.drop('Duration',axis=1,inplace=True)
+
+    #change total_stops
+    train_data['Total_Stops'].replace({'non-stop':0,'1 stop':1,'2 stops':2,'3 stops':3,'4 stops':4},inplace=True)
+
     return train_data
 
 ############################################
@@ -30,7 +68,6 @@ with st.expander("A Glimpse at the Data"):
     st.write(df.head())
     st.markdown('Here, **Price** is the target variable. We won\'t use *Route* and *Additional_info* columns during model training')
 
-############## Destination Analysis ##################
 
 with st.expander("Destination Analysis"):
     destination_counts = df['Destination'].value_counts()
@@ -47,8 +84,55 @@ with st.expander("Destination Analysis"):
     #fig.show()
     # Plot!
     st.plotly_chart(fig, use_container_width=True)
-    st.markdown('Maximum people are going to Cochin followed by Bangalore and then Delhi in our dataset. So, the top 3 destinations are:\
-                - Cochin(42%)\
-                - Bangalore(27%)\
-                - Delhi(20%)\
-                Kolkata receives the least traffic.')
+    st.markdown('Maximum people are going to Cochin followed by Bangalore and then Delhi in our dataset. So, the top 3 destinations are:')
+    st.markdown('- Cochin(42%)')
+    st.markdown('- Bangalore(27%)')
+    st.markdown('- Delhi(20%)')
+    st.markdown ('Kolkata receives the least traffic.')
+
+with st.expander("Source Analysis"):
+    source_counts =  pd.DataFrame(df['Source'].value_counts()); 
+    source_counts['Source_pct'] = (source_counts['Source']/source_counts['Source'].sum())*100.0
+    st.write(source_counts)
+    fig = px.bar(source_counts, y='Source_pct', labels={
+                     "index": "Source",
+                     "Source_pct": "Count(%)", 
+                 }, )
+    fig.update_traces(marker_color='green')
+    st.plotly_chart(fig, use_container_width=True)
+    st.markdown('A plurality of flight passengers fly from **Delhi**, followed by **Kolkata** and **Bangalore**\
+                 respectively. A lot more folks fly from Kolkata than to Kolkata. Delhi and Bangalore has comparatively high inbound and outbound traffic. ')
+
+with st.expander("Airline vs Price"):
+    #sns.catplot(x='Airline',y='Price',data=df.sort_values('Price',ascending=False),kind='boxen',aspect=3,height=6)
+    fig = px.box(df.sort_values('Price',ascending=False), x='Airline', y='Price')
+    st.plotly_chart(fig,)
+    st.markdown('From the plot, we can infer that **Jet Airways** business is the costliest airways while **Spicejet** is comparatively cheaper.')
+
+with st.expander("Source vs Price"):
+    fig = px.box(df.sort_values('Price',ascending=False), x='Source',y='Price',)
+    st.plotly_chart(fig)
+    st.markdown('The plot says if you\'re going from **Bangalore** to anywhere you have to pay the highest amount of money')
+    st.markdown('It\'s comparatively cheaper to travel from **Chennai**')
+
+with st.expander("Destination vs Price"):
+    fig = px.box(df.sort_values('Price',ascending=False), x='Destination',y='Price',)
+    st.plotly_chart(fig)
+    st.markdown('The plot says if you are going to **Delhi** from anywhere, you have to pay the highest amount of money.')
+    st.markdown('It\'s comparatively cheaper to travel to **Kolkata**')
+
+with st.expander("Total Stops"):
+    stops_df = pd.DataFrame(df['Total_Stops'].value_counts())
+    fig = px.bar(stops_df, y='Total_Stops', labels={
+                        "index": "Number of Stops",
+                        "Total_Stops": "Count", 
+                    })
+    st.plotly_chart(fig)
+    st.markdown('Most flights have 1 stop. However, there are quite a number of flights that have no stops in the middle')
+
+with st.expander("Correlation Map of Features and Prices"):
+    #st.write(df.corr())
+    fig = px.imshow(df.corr())
+    st.plotly_chart(fig)
+
+####### Trained Model ##########
