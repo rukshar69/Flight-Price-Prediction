@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import seaborn as sns
+from PIL import Image
 
 
 ####Methods#######################
@@ -56,83 +57,109 @@ def load_data():
 
 ############################################
 st.title('Flight Cost Prediction for India')
-st.markdown('In this Streamlit app, we perform EDA on a dataset containing *Indian* flight info. such as: source, destination,\
-         arrival, departure, duration time, intermediate stoppage, price of ticket, etc. We have trained a **RandomForestRegressor** using this data\
+st.markdown('In this Streamlit app, we perform EDA on a [dataset]() containing *Indian* flight info. such as: source, destination,\
+         arrival, departure, duration time, intermediate stoppage, price of ticket, etc. We have trained a **[RandomForestRegressor](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html)** using this data\
          and the model predicts the **price** of a ticket after providing information about the flight.')
 
-st.header('EDA')
-
-df = load_data() #load data
-
-with st.expander("A Glimpse at the Data"):
-    st.write(df.head())
-    st.markdown('Here, **Price** is the target variable. We won\'t use *Route* and *Additional_info* columns during model training')
+options = ['EDA', 'Model Prediction']
+choice = st.selectbox('Select an option', options)
 
 
-with st.expander("Destination Analysis"):
-    destination_counts = df['Destination'].value_counts()
-    #converting destination_counts to pandas dataframe to use for plotting
-    destination_counts_df = pd.DataFrame(destination_counts,)
-    destination_counts_df['Destination_pct'] =  round((destination_counts_df['Destination'] / destination_counts_df['Destination'].sum()) * 100, 2)
+#choice = 'EDA'
+if choice == 'EDA':
+    st.header('EDA')
 
-    st.write(destination_counts_df)
+    df = load_data() #load data
 
-    fig = px.bar(destination_counts_df, y='Destination_pct', labels={
-                        "index": "Destination",
-                        "Destination_pct": "Count(%)", 
-                    })
-    #fig.show()
-    # Plot!
-    st.plotly_chart(fig, use_container_width=True)
-    st.markdown('Maximum people are going to Cochin followed by Bangalore and then Delhi in our dataset. So, the top 3 destinations are:')
-    st.markdown('- Cochin(42%)')
-    st.markdown('- Bangalore(27%)')
-    st.markdown('- Delhi(20%)')
-    st.markdown ('Kolkata receives the least traffic.')
+    with st.expander("A Glimpse at the Data"):
+        st.write(df.head())
+        st.markdown('Here, **Price** is the target variable. We won\'t use *Route* and *Additional_info* columns during model training')
 
-with st.expander("Source Analysis"):
-    source_counts =  pd.DataFrame(df['Source'].value_counts()); 
-    source_counts['Source_pct'] = (source_counts['Source']/source_counts['Source'].sum())*100.0
-    st.write(source_counts)
-    fig = px.bar(source_counts, y='Source_pct', labels={
-                     "index": "Source",
-                     "Source_pct": "Count(%)", 
-                 }, )
-    fig.update_traces(marker_color='green')
-    st.plotly_chart(fig, use_container_width=True)
-    st.markdown('A plurality of flight passengers fly from **Delhi**, followed by **Kolkata** and **Bangalore**\
-                 respectively. A lot more folks fly from Kolkata than to Kolkata. Delhi and Bangalore has comparatively high inbound and outbound traffic. ')
 
-with st.expander("Airline vs Price"):
-    #sns.catplot(x='Airline',y='Price',data=df.sort_values('Price',ascending=False),kind='boxen',aspect=3,height=6)
-    fig = px.box(df.sort_values('Price',ascending=False), x='Airline', y='Price')
-    st.plotly_chart(fig,)
-    st.markdown('From the plot, we can infer that **Jet Airways** business is the costliest airways while **Spicejet** is comparatively cheaper.')
+    with st.expander("Destination Analysis"):
+        destination_counts = df['Destination'].value_counts()
+        #converting destination_counts to pandas dataframe to use for plotting
+        destination_counts_df = pd.DataFrame(destination_counts,)
+        destination_counts_df['Destination_pct'] =  round((destination_counts_df['Destination'] / destination_counts_df['Destination'].sum()) * 100, 2)
 
-with st.expander("Source vs Price"):
-    fig = px.box(df.sort_values('Price',ascending=False), x='Source',y='Price',)
-    st.plotly_chart(fig)
-    st.markdown('The plot says if you\'re going from **Bangalore** to anywhere you have to pay the highest amount of money')
-    st.markdown('It\'s comparatively cheaper to travel from **Chennai**')
+        st.write(destination_counts_df)
 
-with st.expander("Destination vs Price"):
-    fig = px.box(df.sort_values('Price',ascending=False), x='Destination',y='Price',)
-    st.plotly_chart(fig)
-    st.markdown('The plot says if you are going to **Delhi** from anywhere, you have to pay the highest amount of money.')
-    st.markdown('It\'s comparatively cheaper to travel to **Kolkata**')
+        fig = px.bar(destination_counts_df, y='Destination_pct', labels={
+                            "index": "Destination",
+                            "Destination_pct": "Count(%)", 
+                        })
+        #fig.show()
+        # Plot!
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown('Maximum people are going to Cochin followed by Bangalore and then Delhi in our dataset. So, the top 3 destinations are:')
+        st.markdown('- Cochin(42%)')
+        st.markdown('- Bangalore(27%)')
+        st.markdown('- Delhi(20%)')
+        st.markdown ('Kolkata receives the least traffic.')
 
-with st.expander("Total Stops"):
-    stops_df = pd.DataFrame(df['Total_Stops'].value_counts())
-    fig = px.bar(stops_df, y='Total_Stops', labels={
-                        "index": "Number of Stops",
-                        "Total_Stops": "Count", 
-                    })
-    st.plotly_chart(fig)
-    st.markdown('Most flights have 1 stop. However, there are quite a number of flights that have no stops in the middle')
+    with st.expander("Source Analysis"):
+        source_counts =  pd.DataFrame(df['Source'].value_counts()); 
+        source_counts['Source_pct'] = (source_counts['Source']/source_counts['Source'].sum())*100.0
+        st.write(source_counts)
+        fig = px.bar(source_counts, y='Source_pct', labels={
+                        "index": "Source",
+                        "Source_pct": "Count(%)", 
+                    }, )
+        fig.update_traces(marker_color='green')
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown('A plurality of flight passengers fly from **Delhi**, followed by **Kolkata** and **Bangalore**\
+                    respectively. A lot more folks fly from Kolkata than to Kolkata. Delhi and Bangalore has comparatively high inbound and outbound traffic. ')
 
-with st.expander("Correlation Map of Features and Prices"):
-    #st.write(df.corr())
-    fig = px.imshow(df.corr())
-    st.plotly_chart(fig)
+    with st.expander("Airline vs Price"):
+        #sns.catplot(x='Airline',y='Price',data=df.sort_values('Price',ascending=False),kind='boxen',aspect=3,height=6)
+        fig = px.box(df.sort_values('Price',ascending=False), x='Airline', y='Price')
+        st.plotly_chart(fig,)
+        st.markdown('From the plot, we can infer that **Jet Airways** business is the costliest airways while **Spicejet** is comparatively cheaper.')
 
+    with st.expander("Source vs Price"):
+        fig = px.box(df.sort_values('Price',ascending=False), x='Source',y='Price',)
+        st.plotly_chart(fig)
+        st.markdown('The plot says if you\'re going from **Bangalore** to anywhere you have to pay the highest amount of money')
+        st.markdown('It\'s comparatively cheaper to travel from **Chennai**')
+
+    with st.expander("Destination vs Price"):
+        fig = px.box(df.sort_values('Price',ascending=False), x='Destination',y='Price',)
+        st.plotly_chart(fig)
+        st.markdown('The plot says if you are going to **Delhi** from anywhere, you have to pay the highest amount of money.')
+        st.markdown('It\'s comparatively cheaper to travel to **Kolkata**')
+
+    with st.expander("Total Stops"):
+        stops_df = pd.DataFrame(df['Total_Stops'].value_counts())
+        fig = px.bar(stops_df, y='Total_Stops', labels={
+                            "index": "Number of Stops",
+                            "Total_Stops": "Count", 
+                        })
+        st.plotly_chart(fig)
+        st.markdown('Most flights have 1 stop. However, there are quite a number of flights that have no stops in the middle')
+
+    with st.expander("Correlation Map of Features and Prices"):
+        #st.write(df.corr())
+        fig = px.imshow(df.corr())
+        st.plotly_chart(fig)
+
+elif choice == 'Model Prediction':
+    with st.expander("Input features and Output"):
+
+        st.markdown('Here we train a **Random Forest Regressor** model with **Price** as the target variable using the\
+                    following input features:')
+        
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown('- Arrival time');st.markdown('- Departure time'); st.markdown('- Flight Duration')
+        with col2:
+            st.markdown('- Total stops');st.markdown('- Airline'); st.markdown('- Source'); st.markdown('- Destination')
+
+    with st.expander('Feature Importance'):
+        image = Image.open('images/feature_importance.png')
+        st.image(image, caption='Feature Importance for Flight Price Prediction')
+        st.markdown('- We have used [ExtraTreeRegressor](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.ExtraTreesRegressor.html) to \
+                    determine this chart of feature importance')
+        st.markdown('- Total_stops is the feature with the highest feature importance in deciding the Price')
+        st.markdown('- After that Journey Day(date of departure) also plays a big role in deciding the Price. Prices are generally higher on weekends.')
 ####### Trained Model ##########
