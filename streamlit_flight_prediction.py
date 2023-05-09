@@ -1,9 +1,11 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import seaborn as sns
 from PIL import Image
-
+from datetime import datetime
+import datetime
+import pickle
+from predict import predict
 
 ####Methods#######################
 st.cache_data()
@@ -55,9 +57,14 @@ def load_data():
 
     return train_data
 
+st.cache_resource()
+def load_model():
+    model = pickle.load(open('model/flight_rf.pkl','rb'))
+    return model
+
 ############################################
 st.title('Flight Cost Prediction for India')
-st.markdown('In this Streamlit app, we perform EDA on a [dataset]() containing *Indian* flight info. such as: source, destination,\
+st.markdown('In this Streamlit app, we perform EDA on a [dataset](https://github.com/rukshar69/Flight-Price-Prediction/blob/main/Flight%20Dataset/Data_Train.xlsx) containing *Indian* flight info. such as: source, destination,\
          arrival, departure, duration time, intermediate stoppage, price of ticket, etc. We have trained a **[RandomForestRegressor](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html)** using this data\
          and the model predicts the **price** of a ticket after providing information about the flight.')
 
@@ -143,6 +150,7 @@ if choice == 'EDA':
         st.plotly_chart(fig)
 
 elif choice == 'Model Prediction':
+    st.header('Model Description and Prediction')
     with st.expander("Input features and Output"):
 
         st.markdown('Here we train a **Random Forest Regressor** model with **Price** as the target variable using the\
@@ -162,4 +170,76 @@ elif choice == 'Model Prediction':
                     determine this chart of feature importance')
         st.markdown('- Total_stops is the feature with the highest feature importance in deciding the Price')
         st.markdown('- After that Journey Day(date of departure) also plays a big role in deciding the Price. Prices are generally higher on weekends.')
-####### Trained Model ##########
+
+    with st.expander('Hyperparameter Tuning'):
+        st.markdown('We have performed *Hyperparameter Tuning* using [RandomizedSearchCV](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html).\
+                    RandomizedSearchCV also performs *k-fold cross validation*. The following hyperparameters were tuned:')
+        st.markdown('- n_estimators: Number of trees in random forest')
+        st.markdown('- max_features: Number of features to consider at every split')
+        st.markdown('- max_depth: Maximum number of levels in tree')
+        st.markdown('- min_samples_split: Minimum number of samples required to split a node')
+        st.markdown('- min_samples_leaf: Minimum number of samples required at each leaf node')
+        st.markdown('The best hyperparameters:')
+        st.write({'n_estimators': 700,
+                    'min_samples_split': 15,
+                    'min_samples_leaf': 1,
+                    'max_features': 'auto',
+                    'max_depth': 20})
+        
+    with st.expander('Results on Test Data'):
+        image = Image.open('images/residual_price.png')
+        st.image(image, caption='Residual price(difference between prediction and actual price) vs frequency')
+        st.markdown('As we can see that most of the residuals are 0, which means our model is *generalizing well*.')
+        image = Image.open('images/scatter_plot_pred_truth.png')
+        st.image(image, caption='Scatter plot prediction vs true prices of flights')
+        st.markdown('Ideally, it should be a straight line but I guess this is close enough')
+        st.markdown('r2 score:  :green[0.80880667420437]')
+
+    st.write('### Flight Price Prediction:')
+    with st.form("Flight_prediction_form"):
+        st.write("Provide Inputs")
+
+        sources = ['Delhi', 'Kolkata', 'Banglore', 'Mumbai', 'Chennai']
+        src_choice = st.selectbox('Source', sources)
+
+        destinations = ['Cochin',  'Banglore', 'Delhi','Hyderabad', 'Kolkata',]
+        dest_choice = st.selectbox('Destination', destinations)
+
+        stops = [0,1,2,3,4]
+        stop_choice = st.selectbox('No. of Stops', stops)
+
+        airlines = ['Jet Airways', 'IndiGo', 'Air India',
+        'Multiple carriers', 'SpiceJet', 'Vistara',
+        'GoAir', 'Multiple carriers Premium economy',
+        'Jet Airways Business', 'Vistara Premium economy',
+        'Trujet']
+        airline_choice = st.selectbox('Which Airline?', airlines)
+
+        today = datetime.date.today()
+        departure_date = st.date_input('Departure date', today)
+        departure_time = st.time_input('Departure time', datetime.time(8, 45))
+
+        today = datetime.date.today()
+        arrival_date = st.date_input('Arrival date', today)
+        arrival_time = st.time_input('Arrival time', datetime.time(8, 45))
+        
+        # Every form must have a submit button.
+        submitted = st.form_submit_button("Submit")
+        if submitted:
+            st.write("- Source:", src_choice,)
+            st.write("- Destination:", dest_choice)
+            st.write("- No. of Stops:", stop_choice)
+            st.write("- Airline:", airline_choice)
+
+            if arrival_date<departure_date:
+                st.error('Arrival date must be later than Departure date!!!')
+            elif arrival_date==departure_date and arrival_time < departure_time:
+                st.error('Arrival time must be later than the departure time!!!')
+            else:
+                st.write("- Departure date:", (departure_date))
+                st.write("- Departure time:", (departure_time))
+                st.write("- Arrival date:", (departure_date))
+                st.write("- Arrival time:", (departure_time))
+                
+    
+    #st.write('outside form '+str(checkbox_val))
