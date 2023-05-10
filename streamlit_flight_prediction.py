@@ -198,48 +198,61 @@ elif choice == 'Model Prediction':
     st.write('### Flight Price Prediction:')
     with st.form("Flight_prediction_form"):
         st.write("Provide Inputs")
+        col1, col2 = st.columns(2)
+        with col1:
+            sources = ['Delhi', 'Kolkata', 'Banglore', 'Mumbai', 'Chennai']
+            src_choice = st.selectbox('Source', sources)
 
-        sources = ['Delhi', 'Kolkata', 'Banglore', 'Mumbai', 'Chennai']
-        src_choice = st.selectbox('Source', sources)
+            destinations = ['Cochin',  'Banglore', 'Delhi','Hyderabad', 'Kolkata',]
+            dest_choice = st.selectbox('Destination', destinations)
 
-        destinations = ['Cochin',  'Banglore', 'Delhi','Hyderabad', 'Kolkata',]
-        dest_choice = st.selectbox('Destination', destinations)
+            stops = [0,1,2,3,4]
+            stop_choice = st.selectbox('No. of Stops', stops)
 
-        stops = [0,1,2,3,4]
-        stop_choice = st.selectbox('No. of Stops', stops)
+            airlines = ['Jet Airways', 'IndiGo', 'Air India',
+            'Multiple carriers', 'SpiceJet', 'Vistara',
+            'GoAir', 'Multiple carriers Premium economy',
+            'Jet Airways Business', 'Vistara Premium economy',
+            'Trujet']
+            airline_choice = st.selectbox('Which Airline?', airlines)
 
-        airlines = ['Jet Airways', 'IndiGo', 'Air India',
-        'Multiple carriers', 'SpiceJet', 'Vistara',
-        'GoAir', 'Multiple carriers Premium economy',
-        'Jet Airways Business', 'Vistara Premium economy',
-        'Trujet']
-        airline_choice = st.selectbox('Which Airline?', airlines)
+        with col2:
+            today = datetime.date.today()
+            departure_date = st.date_input('Departure date', today)
+            departure_time = st.time_input('Departure time', datetime.time(8, 45))
 
-        today = datetime.date.today()
-        departure_date = st.date_input('Departure date', today)
-        departure_time = st.time_input('Departure time', datetime.time(8, 45))
-
-        today = datetime.date.today()
-        arrival_date = st.date_input('Arrival date', today)
-        arrival_time = st.time_input('Arrival time', datetime.time(8, 45))
+            today = datetime.date.today()
+            arrival_date = st.date_input('Arrival date', today)
+            arrival_time = st.time_input('Arrival time', datetime.time(8, 45))
         
         # Every form must have a submit button.
         submitted = st.form_submit_button("Submit")
         if submitted:
-            st.write("- Source:", src_choice,)
-            st.write("- Destination:", dest_choice)
-            st.write("- No. of Stops:", stop_choice)
-            st.write("- Airline:", airline_choice)
 
             if arrival_date<departure_date:
                 st.error('Arrival date must be later than Departure date!!!')
             elif arrival_date==departure_date and arrival_time < departure_time:
                 st.error('Arrival time must be later than the departure time!!!')
+            elif src_choice == dest_choice:
+                st.error('Source and Destination must be different!')
             else:
-                st.write("- Departure date:", (departure_date))
-                st.write("- Departure time:", (departure_time))
-                st.write("- Arrival date:", (departure_date))
-                st.write("- Arrival time:", (departure_time))
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.write("- Source:", src_choice,)
+                    st.write("- Destination:", dest_choice)
+                    st.write("- No. of Stops:", stop_choice)
+                with col2:
+                    st.write("- Airline:", airline_choice)
+                    dep_time = departure_date.strftime("%Y-%m-%d") + ' '+ departure_time.strftime("%H:%M")
+                    arr_time = arrival_date.strftime("%Y-%m-%d") + ' '+ arrival_time.strftime("%H:%M")
+                    st.write("- Departure Time:", dep_time)
+                    st.write("- Arrival time:", arr_time)
+
+                model = pickle.load(open('model/flight_rf.pkl','rb'))
+                price = predict(model,dep_time= dep_time, arrival_time=arr_time, Total_stops=stop_choice,airline=airline_choice,
+                        source = src_choice, destination=dest_choice)
+                st.success("**Predicted flight price:** :green[**{}**]".format(price))
                 
     
     #st.write('outside form '+str(checkbox_val))
