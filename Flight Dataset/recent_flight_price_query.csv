@@ -1,0 +1,5 @@
+Departure Time,Arrival Time,Total Stops,Airline,Source,Destination,Price
+2023-05-11 08:45,2023-05-11 08:45,0,Jet Airways,Delhi,Cochin,6563.29
+2023-05-11 08:45,2023-05-11 08:45,2,Multiple carriers,Delhi,Hyderabad,4999.53
+2023-05-12 08:45,2023-05-13 07:30,2,Multiple carriers,Kolkata,Hyderabad,9610.24
+2023-05-12 08:45,2023-05-13 07:30,0,Vistara,Kolkata,Hyderabad,7931.05

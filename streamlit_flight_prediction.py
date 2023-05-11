@@ -254,5 +254,14 @@ elif choice == 'Model Prediction':
                         source = src_choice, destination=dest_choice)
                 st.success("**Predicted flight price:** :green[**{}**]".format(price))
                 
+                #save the query in a file
+                # query_df = pd.read_csv('./Flight Dataset/recent_flight_price_query.csv')
+                # query_df = query_df.append({'Departure Time':dep_time, 'Arrival Time':arr_time, 'Total Stops':stop_choice, 
+                #                             'Airline':airline_choice, 'Source':src_choice, 'Destination':dest_choice, 'Price':price}, ignore_index=True)
+                # query_df.to_csv('./Flight Dataset/recent_flight_price_query.csv', index = False)
+        
+    with st.expander('Recent Queries'):
+        query_df = pd.read_csv('./Flight Dataset/recent_flight_price_query.csv')
+        st.write(query_df)
     
     #st.write('outside form '+str(checkbox_val))
