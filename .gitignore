@@ -1,2 +1,4 @@
 temp.py
 .~lock.*
+.env
+.hw_api_key
