@@ -3,3 +3,4 @@ temp.py
 .env
 .hw_api_key
 hopsworks_experimentation
+__pycache__
