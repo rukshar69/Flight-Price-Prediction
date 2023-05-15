@@ -260,8 +260,8 @@ elif choice == 'Model Prediction':
                 #                             'Airline':airline_choice, 'Source':src_choice, 'Destination':dest_choice, 'Price':price}, ignore_index=True)
                 # query_df.to_csv('./Flight Dataset/recent_flight_price_query.csv', index = False)
         
-    with st.expander('Recent Queries'):
-        query_df = pd.read_csv('./Flight Dataset/recent_flight_price_query.csv')
-        st.write(query_df)
+    # with st.expander('Recent Queries'):
+    #     query_df = pd.read_csv('./Flight Dataset/recent_flight_price_query.csv')
+    #     st.write(query_df)
     
     #st.write('outside form '+str(checkbox_val))
